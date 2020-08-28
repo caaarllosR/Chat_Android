@@ -83,4 +83,25 @@ class CartModel extends Model {
     this.couponCode = couponCode;
     this.discountPercentage = discountPercentage;
   }
+
+  double getProductPrice(){
+    double price = 0.0;
+    for(CartProduct c in products){
+      if(c.productData != null)
+        price += c.quantity * c.productData.price;
+    }
+    return price;
+  }
+
+  double getDiscount(){
+    return getProductPrice() * (discountPercentage / 100);
+  }
+
+  double getShipPrice(){
+    return 9.99;
+  }
+
+  void updatePrices(){
+    notifyListeners();
+  }
 }
