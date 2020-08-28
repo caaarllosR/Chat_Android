@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
 
 class UserModel extends Model {
@@ -9,6 +9,7 @@ class UserModel extends Model {
 
   FirebaseAuth _auth = FirebaseAuth.instance;
   User _firebaseUser;
+  User get firebaseUser => _firebaseUser;
 
   Map<String, dynamic> _userData = Map();
   Map<String, dynamic> get userData => _userData;
@@ -16,7 +17,9 @@ class UserModel extends Model {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
-
+  static UserModel of(BuildContext context) =>
+    ScopedModel.of<UserModel>(context);
+  
   @override
   void addListener(VoidCallback listener) {
     super.addListener(listener);
@@ -67,7 +70,7 @@ class UserModel extends Model {
     notifyListeners();
     _auth.signInWithEmailAndPassword(email: email, password: pass
     ).then((user) async {
-      _firebaseUser = user as User;
+      _firebaseUser = user.user;
 
       await _loadCurrentUser();
 

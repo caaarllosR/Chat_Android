@@ -19,6 +19,7 @@ class ProductData {
   List   get images      => _images;
 
 
+  set category(String category) {_category = category;}
 
   ProductData.fromDocument(DocumentSnapshot snapshot){
     _id = snapshot.id;
@@ -27,6 +28,14 @@ class ProductData {
     _price = snapshot.data()["price"];
     _images = snapshot.data()["images"];
     _sizes = snapshot.data()["sizes"];
+  }
+
+  Map<String, dynamic> toResumeMap() {
+    return {
+      "title": _title,
+      "description": _description,
+      "price": _price
+    };
   }
 
 }
