@@ -84,7 +84,7 @@ class CartModel extends Model {
     this.discountPercentage = discountPercentage;
   }
 
-  double getProductPrice(){
+  double getProductsPrice(){
     double price = 0.0;
     for(CartProduct c in products){
       if(c.productData != null)
@@ -94,7 +94,7 @@ class CartModel extends Model {
   }
 
   double getDiscount(){
-    return getProductPrice() * (discountPercentage / 100);
+    return getProductsPrice() * (discountPercentage / 100);
   }
 
   double getShipPrice(){
@@ -103,5 +103,52 @@ class CartModel extends Model {
 
   void updatePrices(){
     notifyListeners();
+  }
+
+  Future<String> finishOrder() async {
+    if(products.length == 0) return null;
+
+    _isLoading = true;
+    notifyListeners();
+
+    double productsPrice = getProductsPrice();
+    double shipPrice = getShipPrice();
+    double discount = getDiscount();
+
+    DocumentReference refOrder = await FirebaseFirestore.instance.collection("orders").add(
+        {
+          "clientId": _user.firebaseUser.uid,
+          "products": products.map((cartProduct)=>cartProduct.toMap()).toList(),
+          "shipPrice": shipPrice,
+          "productsPrice": productsPrice,
+          "discount": discount,
+          "totalPrice": productsPrice - discount + shipPrice,
+          "status": 1
+        }
+    );
+
+    await FirebaseFirestore.instance.collection("users").doc(_user.firebaseUser.uid)
+        .collection("orders").doc(refOrder.id).set(
+        {
+          "orderId": refOrder.id
+        }
+    );
+
+    QuerySnapshot query = await FirebaseFirestore.instance.collection("users").doc(_user.firebaseUser.uid)
+        .collection("cart").get();
+
+    for(DocumentSnapshot doc in query.docs){
+      doc.reference.delete();
+    }
+
+    products.clear();
+
+    couponCode = null;
+    discountPercentage = 0;
+
+    _isLoading = false;
+    notifyListeners();
+
+    return refOrder.id;
   }
 }
