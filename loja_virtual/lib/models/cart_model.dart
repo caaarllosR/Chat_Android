@@ -13,6 +13,16 @@ class CartModel extends Model {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
+  String _couponCode;
+  String get couponCode => _couponCode;
+  set couponCode(String couponCode) {_couponCode = couponCode;}
+
+  int _discountPercentage = 0;
+  int get discountPercentage => _discountPercentage;
+  set discountPercentage(int discountPercentage) {_discountPercentage = discountPercentage;}
+
+
+
 
   CartModel(this._user){
     if(_user.isLoggedIn()){
@@ -67,5 +77,10 @@ class CartModel extends Model {
     _products = query.docs.map((doc) => CartProduct.fromDocument(doc)).toList();
 
     notifyListeners();
+  }
+
+  void setCoupon(String couponCode, int discountPercentage){
+    this.couponCode = couponCode;
+    this.discountPercentage = discountPercentage;
   }
 }
