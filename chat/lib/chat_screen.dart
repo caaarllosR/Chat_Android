@@ -18,7 +18,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final GoogleSignIn googleSignIn = GoogleSignIn();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  FirebaseUser _currentUser;
+  User _currentUser;
   bool _isLoading = false;
 
 
@@ -26,24 +26,24 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
 
-    FirebaseAuth.instance.onAuthStateChanged.listen((user){
+    FirebaseAuth.instance.authStateChanges().listen((user){
       setState(() {
         _currentUser = user;
       });
     });
   }
 
-  Future<FirebaseUser> _getUser() async {
+  Future<User> _getUser() async {
     try {
       final GoogleSignInAccount googleSignInAccount = await googleSignIn.signIn();
       final GoogleSignInAuthentication googleSignInAuthentication = await googleSignInAccount.authentication;
       
-      final AuthCredential credential = GoogleAuthProvider.getCredential(
+      final AuthCredential credential = GoogleAuthProvider.credential(
           idToken: googleSignInAuthentication.idToken, accessToken: googleSignInAuthentication.accessToken
       );
 
-      final AuthResult authResult = await FirebaseAuth.instance.signInWithCredential(credential);
-      final FirebaseUser user = authResult.user;
+      final UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+      final User user = userCredential.user;
       return user;
     } catch (error) {
       return null;
@@ -52,7 +52,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _sendMessage({String text, File imgFile}) async {
 
-    final FirebaseUser user = await _getUser();
+    final User user = await _getUser();
 
     if(user==null){
       _scaffoldKey.currentState.showSnackBar(
@@ -65,7 +65,7 @@ class _ChatScreenState extends State<ChatScreen> {
     Map<String, dynamic> data = {
       "uid": user.uid,
       "senderName": user.displayName,
-      "senderPhotoUrl": user.photoUrl,
+      "senderPhotoUrl": user.photoURL,
       "time": Timestamp.now()
     };
 
@@ -89,7 +89,7 @@ class _ChatScreenState extends State<ChatScreen> {
     });
 
     if(text != null) data['text'] = text;
-    Firestore.instance.collection("messages").add(data);
+    FirebaseFirestore.instance.collection("messages").add(data);
   }
 
   @override
@@ -121,7 +121,7 @@ class _ChatScreenState extends State<ChatScreen> {
             children: <Widget>[
               Expanded(
                   child: StreamBuilder<QuerySnapshot>(
-                    stream: Firestore.instance.collection('messages').orderBy("time").snapshots(),
+                    stream: FirebaseFirestore.instance.collection('messages').orderBy("time").snapshots(),
                     builder: (context, snapshot){
                       switch(snapshot.connectionState){
                         case ConnectionState.none:
@@ -130,15 +130,15 @@ class _ChatScreenState extends State<ChatScreen> {
                             child: CircularProgressIndicator(),
                           );
                         default:
-                          List<DocumentSnapshot> documents = snapshot.data.documents.reversed.toList();
+                          List<DocumentSnapshot> documents = snapshot.hasData ? snapshot.data.docs.reversed.toList() : new List<DocumentSnapshot>();
 
                           return ListView.builder(
                               itemCount: documents.length,
                               reverse: true,
                               itemBuilder: (context, index){
                                 return ChatMessage(
-                                    documents[index].data,
-                                    documents[index].data['uid'] == _currentUser?.uid
+                                    documents[index].data(),
+                                    documents[index].data()['uid'] == _currentUser?.uid
                                 );
                               }
                           );
