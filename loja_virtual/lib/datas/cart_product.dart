@@ -38,11 +38,13 @@ class CartProduct {
 
   set cid(String cid) {_cid = cid;}
 
-  CartProduct({@required String size, @required int quantity, @required String pid, @required String category}){
-    _size     = size;
-    _quantity = quantity;
-    _pid      = pid;
-    _category = category;
+  CartProduct({@required String size, @required int quantity, @required String pid, @required String category, @required ProductData productData})
+  {
+    _size        = size;
+    _quantity    = quantity;
+    _pid         = pid;
+    _category    = category;
+    _productData = productData;
   }
 
   CartProduct.fromDocument(DocumentSnapshot document){
@@ -59,7 +61,7 @@ class CartProduct {
       "pid": _pid,
       "quantity": _quantity,
       "size": _size,
-     // "product": _productData.toResumeMap()
+      "product": _productData.toResumeMap()
     };
   }
 
