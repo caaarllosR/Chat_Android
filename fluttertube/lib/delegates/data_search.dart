@@ -1,6 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 class DataSearch extends SearchDelegate<String> {
 
@@ -19,19 +20,20 @@ class DataSearch extends SearchDelegate<String> {
   @override
   Widget buildLeading(BuildContext context) {
     return IconButton(
-        icon: AnimatedIcon(
-            icon: AnimatedIcons.menu_arrow,
-            progress: transitionAnimation
-        ),
+      icon: AnimatedIcon(
+          icon: AnimatedIcons.menu_arrow,
+          progress: transitionAnimation
+      ),
       onPressed: (){
-          close(context, null);
+        close(context, null);
       },
     );
   }
 
   @override
   Widget buildResults(BuildContext context) {
-    Future.delayed(Duration.zero).then((_) => close(context, query));
+    Future.delayed(Duration.zero).then((_)=>close(context, query));
+
     return Container();
   }
 
@@ -49,17 +51,19 @@ class DataSearch extends SearchDelegate<String> {
             );
           } else {
             return ListView.builder(
-                itemBuilder: ( context, index) {
-                  return ListTile(
-                    title: Text(snapshot.data[index]),
-                    leading: Icon(Icons.play_arrow),
-                    onTap: (){}
-                  );
-                },
+              itemBuilder: (context, index){
+                return ListTile(
+                  title: Text(snapshot.data[index]),
+                  leading: Icon(Icons.play_arrow),
+                  onTap: (){
+                    close(context, snapshot.data[index]);
+                  },
+                );
+              },
               itemCount: snapshot.data.length,
             );
           }
-        }
+        },
       );
   }
 
@@ -68,13 +72,15 @@ class DataSearch extends SearchDelegate<String> {
     http.Response response = await http.get(
         "http://suggestqueries.google.com/complete/search?hl=en&ds=yt&client=youtube&hjson=t&cp=1&q=$search&format=5&alt=json"
     );
+
     if(response.statusCode == 200){
       return json.decode(response.body)[1].map((v){
         return v[0];
       }).toList();
-    }else {
-      throw Exception("Failed to load videos");
+    } else {
+      throw Exception("Failed to load suggestions");
     }
+
   }
 
 }
