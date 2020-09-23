@@ -1,7 +1,10 @@
 import 'package:bloc_pattern/bloc_pattern.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertube/bloc/favorite_bloc.dart';
 import 'package:fluttertube/bloc/videos_bloc.dart';
 import 'package:fluttertube/delegates/data_search.dart';
+import 'package:fluttertube/models/video.dart';
+import 'package:fluttertube/screens/favorites.dart';
 import 'package:fluttertube/widgets/video_tile.dart';
 
 class Home extends StatelessWidget {
@@ -9,6 +12,7 @@ class Home extends StatelessWidget {
   Widget build(BuildContext context) {
 
     final VideosBloc videosBloc = BlocProvider.getBloc<VideosBloc>();
+    final FavoriteBloc favoriteBloc = BlocProvider.getBloc<FavoriteBloc>();
 
     return Scaffold(
       appBar: AppBar(
@@ -21,12 +25,20 @@ class Home extends StatelessWidget {
         actions: <Widget>[
           Align(
             alignment: Alignment.center,
-            child: Text("0"),
+            child: StreamBuilder<Map<String, Video>>(
+                stream: favoriteBloc.outFav,
+                builder: (context, snapshot){
+                  if(snapshot.hasData) return Text("${snapshot.data.length}");
+                  else return Container();
+                }
+            ),
           ),
           IconButton(
             icon: Icon(Icons.star),
             onPressed: (){
-
+              Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context)=>Favorites())
+              );
             },
           ),
           IconButton(
@@ -41,7 +53,6 @@ class Home extends StatelessWidget {
       backgroundColor: Colors.black87,
       body: StreamBuilder(
           stream: videosBloc.outVideos,
-          initialData: [],
           builder: (context, snapshot){
             if(snapshot.hasData)
               return ListView.builder(
